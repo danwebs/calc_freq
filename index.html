@@ -1,0 +1,1046 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Калькулятор частотного переиспользования в сотовой сети</title>
+
+  <style>
+    /* =========================================
+       БАЗОВЫЕ СТИЛИ И ПЕРЕМЕННЫЕ ТЕМЫ
+       ========================================= */
+    :root {
+      --bg: #f3f6fb;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #5b6678;
+      --border: #d9e1ec;
+      --accent: #2563eb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px;
+      display: grid;
+      gap: 16px;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.35rem, 2.5vw, 2rem);
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(320px, 400px) 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-size: 1.15rem;
+    }
+
+    /* =========================================
+       ФОРМА ВВОДА
+       ========================================= */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      font-weight: 500;
+      font-size: 0.94rem;
+    }
+
+    input,
+    select {
+      font: inherit;
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+    }
+
+    input:focus,
+    select:focus,
+    button:focus-visible {
+      outline: 2px solid #93c5fd;
+      outline-offset: 1px;
+    }
+
+    details.optional {
+      margin-top: 12px;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    button {
+      font: inherit;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button:hover {
+      filter: brightness(0.95);
+    }
+
+    button.secondary {
+      background: #e2e8f0;
+      color: var(--text);
+    }
+
+    .error {
+      min-height: 1.2em;
+      margin-top: 10px;
+      color: #b91c1c;
+      font-weight: 600;
+    }
+
+    /* =========================================
+       КАРТОЧКИ РЕЗУЛЬТАТОВ
+       ========================================= */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #f8fafc;
+    }
+
+    .card-wide {
+      grid-column: 1 / -1;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .value {
+      margin-top: 4px;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    .status.bad {
+      background: #dc2626;
+    }
+
+    .status.warning {
+      background: #ea580c;
+    }
+
+    .status.acceptable {
+      background: #ca8a04;
+    }
+
+    .status.good {
+      background: #16a34a;
+    }
+
+    .status.excellent {
+      background: #2563eb;
+    }
+
+    .advice {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      background: #f8fafc;
+    }
+
+    .advice p {
+      margin: 0 0 8px;
+    }
+
+    .advice p:last-child {
+      margin-bottom: 0;
+    }
+
+    .advice.warn {
+      border-color: #dc2626;
+      background: #fef2f2;
+    }
+
+    .advice.good {
+      border-color: #16a34a;
+      background: #f0fdf4;
+    }
+
+    /* =========================================
+       ВИЗУАЛИЗАЦИЯ СОТ
+       ========================================= */
+    .viz-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .viz-controls label {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      font-size: 0.95rem;
+    }
+
+    .viz-controls select {
+      width: auto;
+      min-width: 70px;
+    }
+
+    .hex-map {
+      min-height: 220px;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .hex-map svg {
+      width: 100%;
+      height: auto;
+      max-height: 520px;
+      display: block;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.92rem;
+    }
+
+    .swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      display: inline-block;
+    }
+
+    /* =========================================
+       ТАБЛИЦА СРАВНЕНИЯ
+       ========================================= */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 9px 8px;
+      border-bottom: 1px solid var(--border);
+      text-align: right;
+      vertical-align: middle;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    thead th {
+      background: #f1f5f9;
+      font-size: 0.9rem;
+    }
+
+    tr.selected {
+      background: #eff6ff;
+      font-weight: 600;
+    }
+
+    .bar {
+      height: 8px;
+      width: 100%;
+      min-width: 80px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      overflow: hidden;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      background: var(--accent);
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .formulas ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .formulas code {
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+
+    footer {
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 8px 0 24px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- ШАПКА ПРОЕКТА -->
+    <header>
+      <h1>Калькулятор частотного переиспользования в сотовой сети</h1>
+      <p class="muted">
+        Учебное мини-приложение: сравнивает ёмкость сети и межсотовую интерференцию
+        для N = 1, 3, 4, 7.
+      </p>
+    </header>
+
+    <main>
+      <!-- БЛОК ВВОДА ПАРАМЕТРОВ -->
+      <section class="panel" aria-labelledby="inputTitle">
+        <h2 id="inputTitle">1. Ввод параметров</h2>
+
+        <form id="calcForm" novalidate>
+          <div class="grid-2">
+            <label class="field" for="R">
+              Радиус соты R, км
+              <input id="R" type="number" min="0.1" step="0.1" value="2" required>
+            </label>
+
+            <label class="field" for="N">
+              Коэффициент переиспользования N
+              <select id="N">
+                <option value="1">1</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="7" selected>7</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="grid-2">
+            <label class="field" for="n">
+              Показатель затухания n
+              <input id="n" type="number" min="1" max="6" step="0.1" value="3.5" required>
+            </label>
+
+            <label class="field" for="B">
+              Общая полоса B, МГц
+              <input id="B" type="number" min="0.1" step="0.1" value="20" required>
+            </label>
+          </div>
+
+          <label class="field" for="b">
+            Ширина одного канала b, кГц
+            <input id="b" type="number" min="1" step="1" value="200" required>
+          </label>
+
+          <!-- НЕОБЯЗАТЕЛЬНЫЕ ПОЛЯ -->
+          <details class="optional">
+            <summary>Необязательные параметры</summary>
+
+            <div class="grid-2" style="margin-top: 10px;">
+              <label class="field" for="requiredCI">
+                Требуемый C/I, дБ
+                <input id="requiredCI" type="number" step="0.1" placeholder="например, 9">
+              </label>
+
+              <label class="field" for="sectors">
+                Секторов на БС
+                <input id="sectors" type="number" min="1" max="4" step="1" value="1">
+              </label>
+            </div>
+
+            <label class="field" for="load" style="margin-top: 10px;">
+              Нагрузка сети
+              <select id="load">
+                <option value="low">низкая</option>
+                <option value="medium" selected>средняя</option>
+                <option value="high">высокая</option>
+              </select>
+            </label>
+          </details>
+
+          <div class="actions">
+            <button type="submit">Рассчитать</button>
+            <button type="button" id="exampleBtn" class="secondary">Пример из ТЗ</button>
+            <button type="button" id="resetBtn" class="secondary">Сбросить</button>
+          </div>
+
+          <div id="errorBox" class="error" role="alert" aria-live="polite"></div>
+        </form>
+      </section>
+
+      <!-- БЛОК РЕЗУЛЬТАТА -->
+      <section class="panel" aria-labelledby="resultTitle">
+        <h2 id="resultTitle">2. Результат</h2>
+        <div id="resultCards" class="cards"></div>
+        <div id="advice" class="advice"></div>
+      </section>
+    </main>
+
+    <!-- ВИЗУАЛИЗАЦИЯ ШЕСТИУГОЛЬНЫХ СОТ -->
+    <section class="panel">
+      <h2>3. Схема частотного переиспользования</h2>
+
+      <div class="viz-controls">
+        <label for="ringSize">
+          Радиус схемы (колец):
+          <select id="ringSize">
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </label>
+
+        <label class="checkbox">
+          <input id="highlightCoChannel" type="checkbox" checked>
+          подсветить соканалные соты
+        </label>
+      </div>
+
+      <div id="hexMap" class="hex-map"></div>
+      <div id="legend" class="legend"></div>
+
+      <p class="muted">
+        Центральная сота имеет жирную рамку. Пунктиром показаны соты того же цвета,
+        то есть использующие те же частоты. Схема учебная и не передаёт реальную географию.
+      </p>
+    </section>
+
+    <!-- ТАБЛИЦА СРАВНЕНИЯ N -->
+    <section class="panel">
+      <h2>4. Сравнение N = 1, 3, 4, 7</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>N</th>
+              <th>D/R</th>
+              <th>C/I, дБ</th>
+              <th>Статус</th>
+              <th>Каналов на сайт</th>
+              <th>На сектор</th>
+              <th>Относительная ёмкость</th>
+            </tr>
+          </thead>
+          <tbody id="comparisonBody"></tbody>
+        </table>
+      </div>
+
+      <p class="muted">
+        Расчёт для текущих R, n, полосы и ширины канала.
+        «Каналов на сайт» — без учёта секторизации;
+        «на сектор» — если секторов больше одного.
+      </p>
+    </section>
+
+    <!-- ФОРМУЛЫ -->
+    <section class="panel formulas">
+      <h2>Формулы</h2>
+      <ul>
+        <li><code>D = R × √(3N)</code> — расстояние до сот с той же частотой.</li>
+        <li><code>C/I = (D/R)^n / 6</code> — упрощённое отношение сигнал/интерференция для 6 интерферентов первого кольца.</li>
+        <li><code>C/I_дБ = 10 × log10(C/I)</code>.</li>
+        <li><code>F_total = floor(B × 1000 / b)</code> — общее число каналов.</li>
+        <li><code>F_cell = floor(F_total / N)</code> — каналов на соту/сайт.</li>
+        <li>При секторизации: <code>F_sector = floor(F_total / (N × S))</code>.</li>
+      </ul>
+    </section>
+
+    <footer>
+      Учебный проект. Модель упрощённая: не учитывает рельеф, антенны, замирания,
+      нагрузку трафика и реальные алгоритмы планирования.
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      /* =========================================================
+         ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+         ========================================================= */
+      const mod = (a, m) => ((a % m) + m) % m;
+      const $ = (id) => document.getElementById(id);
+      const fmt = (value, digits = 2) => Number.isFinite(value) ? value.toFixed(digits) : '—';
+      const fmtInt = (value) => Number.isFinite(value) ? Math.trunc(value).toLocaleString('ru-RU') : '—';
+
+      /* =========================================================
+         ПАТТЕРНЫ РАСКРАСКИ ШЕСТИУГОЛЬНОЙ СЕТКИ
+         q, r — осевые координаты соты.
+         Возвращаем индекс частотного набора от 0 до N-1.
+         ========================================================= */
+      const PATTERNS = {
+        1: {
+          count: 1,
+          letters: ['A'],
+          palette: ['#64748b'],
+          color: () => 0
+        },
+        3: {
+          count: 3,
+          letters: ['A', 'B', 'C'],
+          palette: ['#2563eb', '#16a34a', '#dc2626'],
+          color: (q, r) => mod(q + 2 * r, 3)
+        },
+        4: {
+          count: 4,
+          letters: ['A', 'B', 'C', 'D'],
+          palette: ['#7c3aed', '#0891b2', '#ca8a04', '#db2777'],
+          // Для N=4 корректно использовать чётности координат:
+          // цвет = (q mod 2, r mod 2), свёрнутые в число 0..3.
+          color: (q, r) => mod(q, 2) * 2 + mod(r, 2)
+        },
+        7: {
+          count: 7,
+          letters: ['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+          palette: ['#2563eb', '#16a34a', '#dc2626', '#ca8a04', '#7c3aed', '#0891b2', '#db2777'],
+          color: (q, r) => mod(q + 5 * r, 7)
+        }
+      };
+
+      const N_VALUES = [1, 3, 4, 7];
+
+      /* =========================================================
+         DOM-ЭЛЕМЕНТЫ
+         ========================================================= */
+      const form = $('calcForm');
+      const errorBox = $('errorBox');
+      const resultCards = $('resultCards');
+      const advice = $('advice');
+      const hexMap = $('hexMap');
+      const legend = $('legend');
+      const comparisonBody = $('comparisonBody');
+      const ringSize = $('ringSize');
+      const highlightCoChannel = $('highlightCoChannel');
+
+      let lastValidParams = null;
+
+      /* =========================================================
+         ЧТЕНИЕ И ПРОВЕРКА ВХОДНЫХ ДАННЫХ
+         ========================================================= */
+      function readParams() {
+        const requiredRaw = $('requiredCI').value.trim();
+
+        return {
+          R: parseFloat($('R').value),
+          N: parseInt($('N').value, 10),
+          n: parseFloat($('n').value),
+          B: parseFloat($('B').value),
+          b: parseFloat($('b').value),
+          requiredCI: requiredRaw === '' ? null : parseFloat(requiredRaw),
+          sectors: parseInt($('sectors').value, 10),
+          load: $('load').value
+        };
+      }
+
+      function validateParams(params) {
+        const errors = [];
+
+        if (!Number.isFinite(params.R) || params.R <= 0) {
+          errors.push('Укажите радиус соты больше 0 км.');
+        }
+
+        if (!N_VALUES.includes(params.N)) {
+          errors.push('Коэффициент N должен быть равен 1, 3, 4 или 7.');
+        }
+
+        if (!Number.isFinite(params.n) || params.n <= 0) {
+          errors.push('Укажите показатель затухания n больше 0.');
+        }
+
+        if (!Number.isFinite(params.B) || params.B <= 0) {
+          errors.push('Укажите общую полосу частот больше 0 МГц.');
+        }
+
+        if (!Number.isFinite(params.b) || params.b <= 0) {
+          errors.push('Укажите ширину канала больше 0 кГц.');
+        }
+
+        if (params.requiredCI !== null && !Number.isFinite(params.requiredCI)) {
+          errors.push('Требуемый C/I должен быть числом или оставаться пустым.');
+        }
+
+        if (!Number.isInteger(params.sectors) || params.sectors < 1 || params.sectors > 4) {
+          errors.push('Количество секторов должно быть целым числом от 1 до 4.');
+        }
+
+        return errors;
+      }
+
+      /* =========================================================
+         ОСНОВНОЙ РАСЧЁТ ДЛЯ ОДНОГО ЗНАЧЕНИЯ N
+         ========================================================= */
+      function computeForN(params, overrideN) {
+        const N = overrideN === undefined ? params.N : overrideN;
+
+        // D/R = sqrt(3N), D = R * sqrt(3N)
+        const dOverR = Math.sqrt(3 * N);
+        const d = params.R * dOverR;
+
+        // Упрощённая модель: C/I = (D/R)^n / 6
+        const ciLinear = Math.pow(dOverR, params.n) / 6;
+        const ciDb = 10 * Math.log10(ciLinear);
+
+        // Полоса в кГц: B МГц * 1000. Общее число каналов:
+        // +1e-9 защищает от ошибок округления с плавающей точкой.
+        const fTotal = Math.floor((params.B * 1000) / params.b + 1e-9);
+
+        // Каналов на соту/сайт:
+        const fSite = Math.floor(fTotal / N);
+
+        // Если задана секторизация, считаем каналы на сектор.
+        const fSector = params.sectors > 1
+          ? Math.floor(fTotal / (N * params.sectors))
+          : fSite;
+
+        return {
+          N,
+          dOverR,
+          d,
+          ciLinear,
+          ciDb,
+          fTotal,
+          fSite,
+          fSector
+        };
+      }
+
+      function getStatus(ciDb) {
+        if (!Number.isFinite(ciDb)) {
+          return { text: 'Нет данных', cls: 'acceptable' };
+        }
+
+        if (ciDb < 6) {
+          return { text: 'Интерференция очень высокая', cls: 'bad' };
+        }
+
+        if (ciDb < 9) {
+          return { text: 'Интерференция высокая', cls: 'warning' };
+        }
+
+        if (ciDb < 12) {
+          return { text: 'Допустимо', cls: 'acceptable' };
+        }
+
+        if (ciDb <= 15) {
+          return { text: 'Хорошо', cls: 'good' };
+        }
+
+        return { text: 'Отличная помехозащищённость', cls: 'excellent' };
+      }
+
+      /* =========================================================
+         ОТРИСОВКА РЕЗУЛЬТАТОВ
+         ========================================================= */
+      function makeCard(label, value, wide = false) {
+        return `
+          <div class="card${wide ? ' card-wide' : ''}">
+            <div class="label">${label}</div>
+            <div class="value">${value}</div>
+          </div>
+        `;
+      }
+
+      function renderResults(params, result) {
+        const status = getStatus(result.ciDb);
+        const cards = [];
+
+        cards.push(makeCard('Радиус соты R', `${fmt(params.R)} км`));
+        cards.push(makeCard('Коэффициент N', String(result.N)));
+        cards.push(makeCard('Расстояние до соканалных сот D', `${fmt(result.d)} км`));
+        cards.push(makeCard('Приблизительный C/I', `${fmt(result.ciDb)} дБ`));
+        cards.push(makeCard('Всего каналов', fmtInt(result.fTotal)));
+        cards.push(makeCard('Каналов на соту/сайт', fmtInt(result.fSite)));
+
+        if (params.sectors > 1) {
+          cards.push(makeCard('Каналов на сектор', fmtInt(result.fSector)));
+        }
+
+        if (params.requiredCI !== null) {
+          const ok = result.ciDb >= params.requiredCI;
+          cards.push(makeCard(
+            'Требуемый C/I',
+            `${fmt(params.requiredCI)} дБ — ${ok ? 'выполняется' : 'не выполняется'}`
+          ));
+        }
+
+        cards.push(makeCard(
+          'Оценка планирования',
+          `<span class="status ${status.cls}">${status.text}</span>`,
+          true
+        ));
+
+        resultCards.innerHTML = cards.join('');
+        renderAdvice(params, result, status);
+      }
+
+      function renderAdvice(params, result, status) {
+        const messages = [];
+        let hasWarn = false;
+        let hasGood = false;
+
+        const push = (text, type = '') => {
+          if (type === 'warn') hasWarn = true;
+          if (type === 'good') hasGood = true;
+          messages.push(text);
+        };
+
+        const mainType =
+          (status.cls === 'bad' || status.cls === 'warning') ? 'warn' :
+          (status.cls === 'good' || status.cls === 'excellent') ? 'good' :
+          '';
+
+        push(
+          `Главный вывод: при N=${result.N} расстояние до соканалных сот составляет ${fmt(result.d)} км, ` +
+          `расчётный C/I ≈ ${fmt(result.ciDb)} дБ, доступно ${fmtInt(result.fSite)} каналов на соту/сайт. ` +
+          `Чем выше N, тем лучше помеховая обстановка, но меньше частотных ресурсов на соту.`,
+          mainType
+        );
+
+        if (result.fTotal === 0) {
+          push('Общая полоса меньше ширины одного канала: всего 0 каналов. Увеличьте полосу или уменьшите ширину канала.', 'warn');
+        } else if (result.fSite === 0) {
+          push(`При N=${result.N} на соту не остаётся ни одного целого канала. Уменьшите N, увеличьте полосу или уменьшите ширину канала.`, 'warn');
+        }
+
+        if (params.requiredCI !== null) {
+          if (result.ciDb >= params.requiredCI) {
+            push(`Требуемый C/I ${fmt(params.requiredCI)} дБ выполняется: расчётное значение ${fmt(result.ciDb)} дБ.`, 'good');
+          } else {
+            push(`Требуемый C/I ${fmt(params.requiredCI)} дБ не выполняется: расчётное значение ${fmt(result.ciDb)} дБ. Увеличьте N или примените методы снижения интерференции.`, 'warn');
+          }
+        }
+
+        const loadComments = {
+          low: 'Низкая нагрузка: можно выбрать более консервативный план с большим N ради лучшей помехозащищённости.',
+          medium: 'Средняя нагрузка: важен баланс между ёмкостью и интерференцией. Сравните варианты N в таблице.',
+          high: 'Высокая нагрузка: при нехватке каналов рассмотрите меньший N, расширение полосы, секторизацию или ICIC/подавление межсотовой интерференции.'
+        };
+
+        push(loadComments[params.load] || 'Нагрузка не задана.');
+
+        if (params.sectors > 1) {
+          push(
+            `Секторизация S=${params.sectors}: приблизительно ${fmtInt(result.fSector)} каналов приходится на один сектор, ` +
+            `если полоса делится между N сайтами и S секторами.`
+          );
+        }
+
+        advice.className = 'advice' + (hasWarn ? ' warn' : hasGood ? ' good' : '');
+        advice.innerHTML = messages.map((message) => `<p>${message}</p>`).join('');
+      }
+
+      function renderComparison(params) {
+        const rows = N_VALUES.map((N) => computeForN(params, N));
+        const maxSites = Math.max(1, ...rows.map((row) => row.fSite));
+
+        comparisonBody.innerHTML = rows.map((row) => {
+          const status = getStatus(row.ciDb);
+          const selected = row.N === params.N ? ' class="selected"' : '';
+          const width = Math.max(0, Math.round((row.fSite / maxSites) * 100));
+          const sectorText = params.sectors > 1 ? fmtInt(row.fSector) : '—';
+
+          return `
+            <tr${selected}>
+              <td>${row.N}</td>
+              <td>${fmt(row.dOverR)}</td>
+              <td>${fmt(row.ciDb)}</td>
+              <td><span class="status ${status.cls}">${status.text}</span></td>
+              <td>${fmtInt(row.fSite)}</td>
+              <td>${sectorText}</td>
+              <td>
+                <div class="bar"><span style="width:${width}%"></span></div>
+                <small class="muted">${fmtInt(row.fSite)} / ${fmtInt(maxSites)}</small>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      /* =========================================================
+         ВИЗУАЛИЗАЦИЯ ШЕСТИУГОЛЬНЫХ СОТ
+         ========================================================= */
+      function hexPoints(cx, cy, size) {
+        const points = [];
+
+        for (let i = 0; i < 6; i++) {
+          // Угол -30° даёт удобную ориентацию шестиугольника.
+          const angle = (Math.PI / 180) * (60 * i - 30);
+          const x = cx + size * Math.cos(angle);
+          const y = cy + size * Math.sin(angle);
+          points.push(`${x.toFixed(2)},${y.toFixed(2)}`);
+        }
+
+        return points.join(' ');
+      }
+
+      function buildHexMap(N, rings, highlight) {
+        const pattern = PATTERNS[N];
+        if (!pattern) return;
+
+        const size = 34;
+        const sqrt3 = Math.sqrt(3);
+        const cells = [];
+
+        // Генерируем шестиугольную карту радиуса rings в осевых координатах.
+        for (let q = -rings; q <= rings; q++) {
+          const rStart = Math.max(-rings, -q - rings);
+          const rEnd = Math.min(rings, -q + rings);
+
+          for (let r = rStart; r <= rEnd; r++) {
+            cells.push({ q, r });
+          }
+        }
+
+        const mapped = cells.map((cell) => {
+          // Перевод осевых координат в пиксельные для pointy-top шестиугольников.
+          const x = size * sqrt3 * (cell.q + cell.r / 2);
+          const y = size * 1.5 * cell.r;
+          const color = pattern.color(cell.q, cell.r);
+
+          return { ...cell, x, y, color };
+        });
+
+        const centerColor = pattern.color(0, 0);
+        const xs = mapped.map((m) => m.x);
+        const ys = mapped.map((m) => m.y);
+        const pad = size + 12;
+
+        const minX = Math.min(...xs) - pad;
+        const minY = Math.min(...ys) - pad;
+        const maxX = Math.max(...xs) + pad;
+        const maxY = Math.max(...ys) + pad;
+        const viewWidth = maxX - minX;
+        const viewHeight = maxY - minY;
+
+        let svg = `<svg viewBox="${minX.toFixed(2)} ${minY.toFixed(2)} ${viewWidth.toFixed(2)} ${viewHeight.toFixed(2)}" role="img" aria-label="Схема шестиугольных сот">`;
+
+        for (const cell of mapped) {
+          const isCenter = cell.q === 0 && cell.r === 0;
+          const isCoChannel = highlight && !isCenter && cell.color === centerColor;
+
+          const fill = pattern.palette[cell.color] || '#94a3b8';
+          const stroke = isCenter ? '#111827' : (isCoChannel ? '#dc2626' : '#ffffff');
+          const strokeWidth = isCenter ? 3 : (isCoChannel ? 2.5 : 1.5);
+          const dash = isCoChannel ? ' stroke-dasharray="6 3"' : '';
+          const letter = pattern.letters[cell.color] || '?';
+
+          svg += `<polygon points="${hexPoints(cell.x, cell.y, size)}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"${dash}><title>Сота ${letter}, координаты (${cell.q}; ${cell.r})</title></polygon>`;
+          svg += `<text x="${cell.x.toFixed(2)}" y="${cell.y.toFixed(2)}" dy="0.35em" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff" pointer-events="none">${letter}</text>`;
+        }
+
+        svg += '</svg>';
+        hexMap.innerHTML = svg;
+
+        let legendHtml = '';
+        for (let i = 0; i < pattern.count; i++) {
+          legendHtml += `
+            <span class="legend-item">
+              <span class="swatch" style="background:${pattern.palette[i]}"></span>
+              ${pattern.letters[i]}
+            </span>
+          `;
+        }
+
+        if (highlight) {
+          legendHtml += `
+            <span class="legend-item">
+              <span class="swatch" style="border:2px dashed #dc2626;background:transparent"></span>
+              та же частота, что и центральная сота
+            </span>
+          `;
+        }
+
+        legend.innerHTML = legendHtml;
+      }
+
+      /* =========================================================
+         ГЛАВНАЯ ФУНКЦИЯ: ПЕРЕСЧИТЫВАЕТ ВСЁ ПРИЛОЖЕНИЕ
+         ========================================================= */
+      function calculate() {
+        const params = readParams();
+        const errors = validateParams(params);
+
+        if (errors.length > 0) {
+          errorBox.innerHTML = errors.map((error) => `• ${error}`).join('<br>');
+          resultCards.innerHTML = '';
+          advice.className = 'advice';
+          advice.innerHTML = '';
+          comparisonBody.innerHTML = '';
+          lastValidParams = null;
+          return;
+        }
+
+        errorBox.innerHTML = '';
+        lastValidParams = params;
+
+        const result = computeForN(params, params.N);
+
+        renderResults(params, result);
+        renderComparison(params);
+        buildHexMap(
+          params.N,
+          parseInt(ringSize.value, 10) || 3,
+          highlightCoChannel.checked
+        );
+      }
+
+      /* =========================================================
+         СОБЫТИЯ ИНТЕРФЕЙСА
+         ========================================================= */
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        calculate();
+      });
+
+      // Пересчёт при изменении основных полей.
+      ['R', 'N', 'n', 'B', 'b', 'requiredCI', 'sectors', 'load'].forEach((id) => {
+        const element = $(id);
+        if (element) {
+          element.addEventListener('change', calculate);
+        }
+      });
+
+      // Параметры визуализации перерисовывают только схему.
+      ringSize.addEventListener('change', () => {
+        if (lastValidParams) {
+          buildHexMap(
+            lastValidParams.N,
+            parseInt(ringSize.value, 10) || 3,
+            highlightCoChannel.checked
+          );
+        }
+      });
+
+      highlightCoChannel.addEventListener('change', () => {
+        if (lastValidParams) {
+          buildHexMap(
+            lastValidParams.N,
+            parseInt(ringSize.value, 10) || 3,
+            highlightCoChannel.checked
+          );
+        }
+      });
+
+      // Кнопка "Пример из ТЗ".
+      $('exampleBtn').addEventListener('click', () => {
+        $('R').value = '2';
+        $('N').value = '7';
+        $('n').value = '3.5';
+        $('B').value = '20';
+        $('b').value = '200';
+        $('requiredCI').value = '9';
+        $('sectors').value = '1';
+        $('load').value = 'medium';
+        calculate();
+      });
+
+      // Кнопка сброса к значениям по умолчанию.
+      $('resetBtn').addEventListener('click', () => {
+        form.reset();
+        calculate();
+      });
+
+      // Первоначальный расчёт при открытии страницы.
+      calculate();
+    })();
+  </script>
+</body>
+</html>
